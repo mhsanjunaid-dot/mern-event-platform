@@ -16,7 +16,7 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="navbar-container">
         <Link to="/" className="navbar-logo">
-          🎉 EventHub
+          Event Hub
         </Link>
         <div className="navbar-menu">
           {user ? (
@@ -34,6 +34,11 @@ const Navbar = () => {
               <Link to="/signup" className="btn btn-primary btn-sm">
                 Sign Up
               </Link>
+              {user && (
+             <Link to="/create-event" className="btn btn-primary btn-sm">
+              Create Event
+             </Link>
+            )}
             </>
           )}
         </div>

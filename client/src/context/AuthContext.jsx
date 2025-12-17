@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { authService } from '../services/authService';
 
 export const AuthContext = createContext();
 
@@ -30,8 +31,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    authService.logout();
   };
 
   return (

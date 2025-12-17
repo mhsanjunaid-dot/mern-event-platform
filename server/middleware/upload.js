@@ -1,36 +1,35 @@
 import multer from 'multer';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import cloudinary from '../config/cloudinary.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// Configure storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../uploads'));
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+// Configure Cloudinary storage
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    return {
+      folder: 'event-platform/events', // Organize uploads in folders
+      resource_type: 'auto',
+      public_id: `${Date.now()}-${file.originalname.split('.')[0]}`
+    };
   }
 });
 
+// File filter for images only
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
+  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
-  if (mimetype && extname) {
-    return cb(null, true);
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed (jpeg, jpg, png, gif)'));
+    cb(new Error('Only image files are allowed (jpeg, jpg, png, gif, webp)'), false);
   }
 };
 
+// Create multer instance
 const upload = multer({
-  storage,
+  storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
-  fileFilter
+  fileFilter: fileFilter
 });
 
 export default upload;
