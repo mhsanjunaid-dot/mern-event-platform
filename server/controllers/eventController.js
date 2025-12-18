@@ -1,5 +1,5 @@
 import { Event, User } from '../models/index.js';
-import { uploadImage, deleteImage } from '../middleware/imageStorage.js';
+import { uploadImage } from '../middleware/imageStorage.js';
 
 export const createEvent = async (req, res, next) => {
   try {
@@ -180,44 +180,6 @@ export const updateEvent = async (req, res, next) => {
       success: true,
       message: 'Event updated successfully',
       event
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const deleteEvent = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-
-    const event = await Event.findById(id);
-    if (!event) {
-      return res.status(404).json({
-        success: false,
-        message: 'Event not found'
-      });
-    }
-
-    if (event.createdBy.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to delete this event'
-      });
-    }
-
-    if (event.imagePublicId) {
-      try {
-        await deleteImage(event.imagePublicId);
-      } catch (deleteImageError) {
-        console.error('Error deleting image from Cloudinary:', deleteImageError);
-      }
-    }
-
-    await Event.findByIdAndDelete(id);
-
-    res.status(200).json({
-      success: true,
-      message: 'Event deleted successfully'
     });
   } catch (error) {
     next(error);

@@ -28,11 +28,6 @@ export const eventService = {
       }
     });
     return response.data;
-  },
-
-  deleteEvent: async (id) => {
-    const response = await axiosInstance.delete(`/events/${id}`);
-    return response.data;
   }
 
 };

@@ -3,8 +3,7 @@ import {
   createEvent,
   getAllEvents,
   getEventById,
-  updateEvent,
-  deleteEvent
+  updateEvent
 } from '../controllers/eventController.js';
 import { protect } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
