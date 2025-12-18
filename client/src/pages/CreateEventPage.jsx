@@ -150,8 +150,17 @@ const CreateEventPage = () => {
       submitData.append('capacity', parseInt(formData.capacity, 10));
 
       if (imageFile) {
+        console.log('📸 Image file being appended:', imageFile.name, imageFile.size);
         submitData.append('image', imageFile);
+      } else {
+        console.log('⚠️ No image file selected');
       }
+
+      console.log('📤 FormData being sent:', {
+        hasImage: !!imageFile,
+        imageFileName: imageFile?.name,
+        imageSize: imageFile?.size
+      });
 
       const response = await eventService.createEvent(submitData);
 
