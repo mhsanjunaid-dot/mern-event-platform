@@ -58,20 +58,19 @@ const EventCard = ({
   };
 
   const handleDeleteEvent = async () => {
-  try {
-    setDeleteLoading(true);
-
-    await eventService.deleteEvent(event._id);
-
-    setShowDeleteConfirm(false);
-    onEventDeleted(event._id);  // send ID to parent to refresh UI
-  } catch (err) {
-    setShowDeleteConfirm(false);
-    onRsvpError(err.response?.data?.message || 'Failed to delete event');
-  } finally {
-    setDeleteLoading(false);
-  }
-};
+    try {
+      setDeleteLoading(true);
+      await eventService.deleteEvent(event._id);
+      setShowDeleteConfirm(false);
+      onEventDeleted(event._id);
+    } catch (err) {
+      setShowDeleteConfirm(false);
+      const errorMsg = err.response?.data?.message || 'Failed to delete event';
+      onRsvpError(errorMsg);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
 
   const getImageUrl = () => {
@@ -202,8 +201,9 @@ const EventCard = ({
               e.stopPropagation();
               setShowDeleteConfirm(true);
                 }}
+              disabled={deleteLoading}
                >
-               Delete Event
+               {deleteLoading ? 'Deleting...' : 'Delete Event'}
               </button>
               </>
         )}
@@ -217,15 +217,15 @@ const EventCard = ({
           </div>
         </div>
 
-        {showDeleteConfirm && isEventCreator && event._id === user.id && (
-           <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
+        {showDeleteConfirm && isEventCreator && (
+           <div className="modal-overlay" onClick={() => !deleteLoading && setShowDeleteConfirm(false)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <h3>⚠️ Delete Event?</h3>
               <p>
                 Are you sure you want to delete <strong>"{event.title}"</strong>? 
               </p>
               <p className="modal-warning">
-                This action cannot be undone. All attendees will lose access to this event.
+                This action cannot be undone.
               </p>
               <div className="modal-actions">
                 <button
@@ -245,7 +245,6 @@ const EventCard = ({
                   >
                    {deleteLoading ? "Deleting..." : "Yes, Delete Event"}
                  </button>
-
               </div>
             </div>
           </div>

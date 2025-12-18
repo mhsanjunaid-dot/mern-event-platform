@@ -186,36 +186,4 @@ export const updateEvent = async (req, res, next) => {
   }
 };
 
-export const deleteEvent = async (req, res, next) => {
-  try {
-    const { id } = req.params;
 
-    const event = await Event.findById(id);
-    if (!event) {
-      return res.status(404).json({
-        success: false,
-        message: 'Event not found'
-      });
-    }
-
-    if (event.createdBy.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to delete this event'
-      });
-    }
-
-    if (event.imagePublicId) {
-      await deleteImage(event.imagePublicId);
-    }
-
-    await Event.findByIdAndDelete(id);
-
-    res.status(200).json({
-      success: true,
-      message: 'Event deleted successfully'
-    });
-  } catch (error) {
-    next(error);
-  }
-};

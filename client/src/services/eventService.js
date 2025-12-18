@@ -24,7 +24,6 @@ export const eventService = {
   updateEvent: async (id, formData) => {
     const response = await axiosInstance.put(`/events/${id}`, formData, {
       headers: {
-        // FIX: allow browser to auto-generate multipart boundary
         "Content-Type": "multipart/form-data",
       }
     });
@@ -35,4 +34,5 @@ export const eventService = {
     const response = await axiosInstance.delete(`/events/${id}`);
     return response.data;
   }
+
 };

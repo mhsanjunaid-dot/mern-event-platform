@@ -16,8 +16,6 @@ const EventsDashboard = () => {
   const [sortBy, setSortBy] = useState('date');
   const [rsvpLoading, setRsvpLoading] = useState({});
 
-  const [pendingDeleteId, setPendingDeleteId] = useState(null);
-
   const { user } = useAuth();
 
   useEffect(() => {
@@ -85,10 +83,10 @@ const EventsDashboard = () => {
   }, []);
 
   const handleEventDeleted = useCallback((id) => {
-  setEvents((prev) => prev.filter((e) => e._id !== id));
-  setSuccessMessage('Event deleted successfully');
-  setTimeout(() => setSuccessMessage(''), 3000);
-}, []);
+    setEvents((prev) => prev.filter((e) => e._id !== id));
+    setSuccessMessage('Event deleted successfully');
+    setTimeout(() => setSuccessMessage(''), 3000);
+  }, []);
 
 
   const clearFilters = () => {
