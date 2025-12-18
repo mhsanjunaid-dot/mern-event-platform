@@ -12,9 +12,12 @@ const EventsDashboard = () => {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState('all'); // all, attending, created
-  const [sortBy, setSortBy] = useState('date'); // date, title
+  const [filterType, setFilterType] = useState('all');
+  const [sortBy, setSortBy] = useState('date');
   const [rsvpLoading, setRsvpLoading] = useState({});
+
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+
   const { user } = useAuth();
 
   useEffect(() => {
@@ -83,8 +86,12 @@ const EventsDashboard = () => {
 
   const handleEventDeleted = useCallback(() => {
     setSuccessMessage('Event deleted successfully');
+    setPendingDeleteId(null); // 🔥 fix glitch: clear delete focus
     setTimeout(() => setSuccessMessage(''), 3000);
-    fetchAllEvents();
+
+    setTimeout(() => {
+      fetchAllEvents(); // 🔥 delay refresh 200ms to stop flicker
+    }, 200);
   }, []);
 
   const clearFilters = () => {
@@ -110,7 +117,7 @@ const EventsDashboard = () => {
   return (
     <div className="dashboard-container">
       <div className="container">
-        {/* Header Section */}
+
         <div className="dashboard-header">
           <div className="header-content">
             <h1>Events Dashboard</h1>
@@ -118,6 +125,7 @@ const EventsDashboard = () => {
               {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''} found
             </p>
           </div>
+
           {user && (
             <Link to="/create-event" className="btn btn-primary btn-lg">
               + Create Event
@@ -125,7 +133,6 @@ const EventsDashboard = () => {
           )}
         </div>
 
-        {/* Messages */}
         {error && (
           <div className="alert alert-error">
             {error}
@@ -138,6 +145,7 @@ const EventsDashboard = () => {
             </button>
           </div>
         )}
+
         {successMessage && (
           <div className="alert alert-success">
             {successMessage}
@@ -151,12 +159,11 @@ const EventsDashboard = () => {
           </div>
         )}
 
-        {/* Search and Filter Section */}
         <div className="search-filter-section">
           <div className="search-box">
             <input
               type="text"
-              placeholder="Search events by title, location, or description..."
+              placeholder="Search events..."
               value={searchQuery}
               onChange={handleSearchChange}
               className="search-input"
@@ -200,23 +207,10 @@ const EventsDashboard = () => {
           </div>
         </div>
 
-        {/* Events Grid */}
         {filteredEvents.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">📭</div>
             <h3>No events found</h3>
-            <p>
-              {filterType === 'attending'
-                ? "You're not attending any events yet. Explore all events to find something interesting!"
-                : filterType === 'created'
-                ? "You haven't created any events yet. Start by creating your first event!"
-                : 'No events match your search. Try adjusting your filters.'}
-            </p>
-            {(searchQuery || filterType !== 'all') && (
-              <button className="btn btn-primary" onClick={clearFilters}>
-                Clear Filters and Try Again
-              </button>
-            )}
           </div>
         ) : (
           <div className="events-grid">
@@ -239,6 +233,7 @@ const EventsDashboard = () => {
             ))}
           </div>
         )}
+
       </div>
     </div>
   );
