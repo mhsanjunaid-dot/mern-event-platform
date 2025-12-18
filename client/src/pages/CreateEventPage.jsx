@@ -158,8 +158,9 @@ const CreateEventPage = () => {
       setSuccessMessage('Event created successfully! Redirecting...');
 
       setTimeout(() => {
-        navigate('/');
-      }, 1000);
+  navigate('/dashboard');
+}, 1000);
+
     } catch (error) {
       const errorMessage =
         error.response?.data?.message ||
