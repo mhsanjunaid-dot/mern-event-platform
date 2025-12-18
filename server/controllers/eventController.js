@@ -3,11 +3,6 @@ import { uploadImage, deleteImage } from '../middleware/imageStorage.js';
 
 export const createEvent = async (req, res, next) => {
   try {
-    console.log('🔍 DEBUG: createEvent called');
-    console.log('📁 req.file:', req.file);
-    console.log('📝 req.body:', req.body);
-    console.log('🔐 req.user:', req.user);
-    
     const { title, description, dateTime, location, capacity } = req.body;
 
     if (!title || !description || !dateTime || !location || !capacity) {
@@ -43,22 +38,18 @@ export const createEvent = async (req, res, next) => {
     };
 
     if (req.file) {
-      console.log('📸 Image file detected, uploading...');
       try {
         const imageData = await uploadImage(req.file);
-        console.log('✅ Image uploaded successfully:', imageData);
         eventData.image = imageData.url;
         eventData.imagePublicId = imageData.publicId;
       } catch (uploadError) {
-        console.error('❌ Error uploading image:', uploadError);
+        console.error('Error uploading image:', uploadError);
         return res.status(500).json({
           success: false,
           message: 'Failed to upload image',
           error: uploadError.message
         });
       }
-    } else {
-      console.log('⚠️ No image file provided');
     }
 
     const event = await Event.create(eventData);
