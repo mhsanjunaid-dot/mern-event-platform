@@ -28,8 +28,9 @@ app.use(
       const allowedOrigins = [
         "http://localhost:5173",
         "http://localhost:3000",
-        process.env.FRONTEND_URL || "https://mern-event-platform.vercel.app"
-      ];
+        "https://mern-event-platform-ahzbkxag7-mhsanjunaid-dots-projects.vercel.app",
+        process.env.FRONTEND_URL
+      ].filter(Boolean);
       
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
