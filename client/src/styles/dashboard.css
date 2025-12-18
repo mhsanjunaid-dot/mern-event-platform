@@ -210,12 +210,14 @@
 @media (min-width: 1024px) {
   .events-grid {
     grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
   }
 }
 
 @media (min-width: 1440px) {
   .events-grid {
     grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
   }
 }
 

@@ -9,13 +9,19 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import './App.css';
 
+function RootRedirect() {
+  const token = localStorage.getItem('token');
+  return token ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />;
+}
+
 function App() {
   return (
     <Router>
       <AuthProvider>
         <Navbar />
         <Routes>
-          <Route path="/" element={<EventsDashboard />} />
+          <Route path="/" element={<RootRedirect />} />
+          <Route path="/dashboard" element={<ProtectedRoute><EventsDashboard /></ProtectedRoute>} />
           <Route path="/create-event" element={<CreateEventPage />} />
           <Route path="/edit-event/:id" element={<EditEventPage />} />
           <Route path="/login" element={<LoginPage />} />
