@@ -54,12 +54,20 @@ const handleLeaveEvent = async () => {
   }
 };
   const handleDeleteEvent = async () => {
+    // Verify user is the event creator (client-side check)
+    if (!isEventCreator) {
+      onRsvpError('You are not authorized to delete this event. Only the event creator can delete it.');
+      setShowDeleteConfirm(false);
+      return;
+    }
+
     try {
       setDeleteLoading(true);
       await eventService.deleteEvent(event._id);
       onEventDeleted();
     } catch (err) {
-      onRsvpError(err.response?.data?.message || 'Failed to delete event');
+      const errorMessage = err.response?.data?.message || 'Failed to delete event';
+      onRsvpError(errorMessage);
     } finally {
       setDeleteLoading(false);
       setShowDeleteConfirm(false);
@@ -217,11 +225,16 @@ const handleLeaveEvent = async () => {
       </div>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
+      {showDeleteConfirm && isEventCreator && (
         <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Delete Event?</h3>
-            <p>Are you sure you want to delete "{event.title}"? This action cannot be undone.</p>
+            <h3>⚠️ Delete Event?</h3>
+            <p>
+              Are you sure you want to delete <strong>"{event.title}"</strong>? 
+            </p>
+            <p className="modal-warning">
+              This action cannot be undone. All attendees will lose access to this event.
+            </p>
             <div className="modal-actions">
               <button
                 className="btn btn-secondary"
@@ -235,7 +248,7 @@ const handleLeaveEvent = async () => {
                 onClick={handleDeleteEvent}
                 disabled={deleteLoading}
               >
-                {deleteLoading ? 'Deleting...' : 'Delete'}
+                {deleteLoading ? 'Deleting...' : 'Yes, Delete Event'}
               </button>
             </div>
           </div>
