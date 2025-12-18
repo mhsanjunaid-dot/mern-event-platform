@@ -3,13 +3,18 @@ import cloudinary from '../config/cloudinary.js';
 
 export const createEvent = async (req, res, next) => {
   try {
+    // Extract text fields from req.body (populated by multer)
     const { title, description, dateTime, location, capacity } = req.body;
 
     // Validation
     if (!title || !description || !dateTime || !location || !capacity) {
       // Delete uploaded image if validation fails
-      if (req.file) {
-        await cloudinary.uploader.destroy(req.file.public_id);
+      if (req.file && req.file.public_id) {
+        try {
+          await cloudinary.uploader.destroy(req.file.public_id);
+        } catch (deleteError) {
+          console.error('Error deleting image from Cloudinary:', deleteError);
+        }
       }
       return res.status(400).json({
         success: false,
@@ -17,9 +22,13 @@ export const createEvent = async (req, res, next) => {
       });
     }
 
-    if (capacity < 1) {
-      if (req.file) {
-        await cloudinary.uploader.destroy(req.file.public_id);
+    if (isNaN(capacity) || capacity < 1) {
+      if (req.file && req.file.public_id) {
+        try {
+          await cloudinary.uploader.destroy(req.file.public_id);
+        } catch (deleteError) {
+          console.error('Error deleting image from Cloudinary:', deleteError);
+        }
       }
       return res.status(400).json({
         success: false,
@@ -28,30 +37,35 @@ export const createEvent = async (req, res, next) => {
     }
 
     // Check if dateTime is in future
-    if (new Date(dateTime) < new Date()) {
-      if (req.file) {
-        await cloudinary.uploader.destroy(req.file.public_id);
+    const eventDateTime = new Date(dateTime);
+    if (isNaN(eventDateTime.getTime()) || eventDateTime < new Date()) {
+      if (req.file && req.file.public_id) {
+        try {
+          await cloudinary.uploader.destroy(req.file.public_id);
+        } catch (deleteError) {
+          console.error('Error deleting image from Cloudinary:', deleteError);
+        }
       }
       return res.status(400).json({
         success: false,
-        message: 'Event date must be in the future'
+        message: 'Event date must be valid and in the future'
       });
     }
 
     // Prepare event data
     const eventData = {
-      title,
-      description,
-      dateTime,
-      location,
-      capacity: parseInt(capacity),
+      title: title.trim(),
+      description: description.trim(),
+      dateTime: eventDateTime,
+      location: location.trim(),
+      capacity: parseInt(capacity, 10),
       createdBy: req.user.id,
       attendees: [req.user.id] // Creator is automatically an attendee
     };
 
-    // Add image URL if uploaded to Cloudinary
-    if (req.file) {
-      eventData.image = req.file.secure_url; // Use secure_url from Cloudinary
+    // Add image URL if file was uploaded (Cloudinary secure_url)
+    if (req.file && req.file.secure_url) {
+      eventData.image = req.file.secure_url;
     }
 
     const event = await Event.create(eventData);
@@ -66,7 +80,7 @@ export const createEvent = async (req, res, next) => {
     });
   } catch (error) {
     // Delete uploaded image if event creation fails
-    if (req.file) {
+    if (req.file && req.file.public_id) {
       try {
         await cloudinary.uploader.destroy(req.file.public_id);
       } catch (deleteError) {
@@ -126,8 +140,12 @@ export const updateEvent = async (req, res, next) => {
     // Find event
     let event = await Event.findById(id);
     if (!event) {
-      if (req.file) {
-        await cloudinary.uploader.destroy(req.file.public_id);
+      if (req.file && req.file.public_id) {
+        try {
+          await cloudinary.uploader.destroy(req.file.public_id);
+        } catch (deleteError) {
+          console.error('Error deleting image from Cloudinary:', deleteError);
+        }
       }
       return res.status(404).json({
         success: false,
@@ -137,8 +155,12 @@ export const updateEvent = async (req, res, next) => {
 
     // Check authorization
     if (event.createdBy.toString() !== req.user.id) {
-      if (req.file) {
-        await cloudinary.uploader.destroy(req.file.public_id);
+      if (req.file && req.file.public_id) {
+        try {
+          await cloudinary.uploader.destroy(req.file.public_id);
+        } catch (deleteError) {
+          console.error('Error deleting image from Cloudinary:', deleteError);
+        }
       }
       return res.status(403).json({
         success: false,
@@ -147,9 +169,13 @@ export const updateEvent = async (req, res, next) => {
     }
 
     // Validate capacity doesn't go below current attendee count
-    if (capacity && parseInt(capacity) < event.attendees.length) {
-      if (req.file) {
-        await cloudinary.uploader.destroy(req.file.public_id);
+    if (capacity && parseInt(capacity, 10) < event.attendees.length) {
+      if (req.file && req.file.public_id) {
+        try {
+          await cloudinary.uploader.destroy(req.file.public_id);
+        } catch (deleteError) {
+          console.error('Error deleting image from Cloudinary:', deleteError);
+        }
       }
       return res.status(400).json({
         success: false,
@@ -158,34 +184,38 @@ export const updateEvent = async (req, res, next) => {
     }
 
     // Validate dateTime is in future
-    if (dateTime && new Date(dateTime) < new Date()) {
-      if (req.file) {
-        await cloudinary.uploader.destroy(req.file.public_id);
+    if (dateTime) {
+      const newDateTime = new Date(dateTime);
+      if (isNaN(newDateTime.getTime()) || newDateTime < new Date()) {
+        if (req.file && req.file.public_id) {
+          try {
+            await cloudinary.uploader.destroy(req.file.public_id);
+          } catch (deleteError) {
+            console.error('Error deleting image from Cloudinary:', deleteError);
+          }
+        }
+        return res.status(400).json({
+          success: false,
+          message: 'Event date must be valid and in the future'
+        });
       }
-      return res.status(400).json({
-        success: false,
-        message: 'Event date must be in the future'
-      });
+      event.dateTime = newDateTime;
     }
 
     // Update fields
-    if (title) event.title = title;
-    if (description) event.description = description;
-    if (dateTime) event.dateTime = dateTime;
-    if (location) event.location = location;
-    if (capacity) event.capacity = parseInt(capacity);
+    if (title) event.title = title.trim();
+    if (description) event.description = description.trim();
+    if (location) event.location = location.trim();
+    if (capacity) event.capacity = parseInt(capacity, 10);
 
     // Handle image update
-    if (req.file) {
+    if (req.file && req.file.secure_url) {
       // Delete old image from Cloudinary if it exists
       if (event.image) {
         try {
-          // Extract public_id from Cloudinary URL
-          // URL format: https://res.cloudinary.com/[cloud_name]/image/upload/v[version]/[public_id]
           const urlParts = event.image.split('/');
           const publicId = urlParts[urlParts.length - 1].split('.')[0];
           const fullPublicId = `event-platform/events/${publicId}`;
-          
           await cloudinary.uploader.destroy(fullPublicId);
         } catch (deleteError) {
           console.error('Error deleting old image from Cloudinary:', deleteError);
@@ -206,7 +236,7 @@ export const updateEvent = async (req, res, next) => {
     });
   } catch (error) {
     // Delete uploaded image if update fails
-    if (req.file) {
+    if (req.file && req.file.public_id) {
       try {
         await cloudinary.uploader.destroy(req.file.public_id);
       } catch (deleteError) {
@@ -240,15 +270,12 @@ export const deleteEvent = async (req, res, next) => {
     // Delete image from Cloudinary if it exists
     if (event.image) {
       try {
-        // Extract public_id from Cloudinary URL
         const urlParts = event.image.split('/');
         const publicId = urlParts[urlParts.length - 1].split('.')[0];
         const fullPublicId = `event-platform/events/${publicId}`;
-        
         await cloudinary.uploader.destroy(fullPublicId);
       } catch (deleteError) {
         console.error('Error deleting image from Cloudinary:', deleteError);
-        // Continue with event deletion even if image deletion fails
       }
     }
 

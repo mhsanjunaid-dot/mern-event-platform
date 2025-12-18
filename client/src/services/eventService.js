@@ -26,9 +26,7 @@ export const eventService = {
    * @returns {Promise} Created event data
    */
   createEvent: async (formData) => {
-    const response = await axiosInstance.post('/events', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const response = await axiosInstance.post('/events', formData);
     return response.data;
   },
 
@@ -39,9 +37,7 @@ export const eventService = {
    * @returns {Promise} Updated event data
    */
   updateEvent: async (id, formData) => {
-    const response = await axiosInstance.put(`/events/${id}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const response = await axiosInstance.put(`/events/${id}`, formData);
     return response.data;
   },
 

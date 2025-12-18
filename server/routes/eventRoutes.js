@@ -15,9 +15,9 @@ const router = express.Router();
 router.get('/', getAllEvents);
 router.get('/:id', getEventById);
 
-// Protected routes
-router.post('/', protect, upload.single('image'), createEvent);
-router.put('/:id', protect, upload.single('image'), updateEvent);
+// Protected routes - multer.single('image') parses FormData and populates req.file + req.body
+router.post('/', protect, upload.fields([{ name: 'image', maxCount: 1 }]), createEvent);
+router.put('/:id', protect, upload.fields([{ name: 'image', maxCount: 1 }]), updateEvent);
 router.delete('/:id', protect, deleteEvent);
 
 export default router;
