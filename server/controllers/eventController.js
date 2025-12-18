@@ -38,8 +38,9 @@ export const createEvent = async (req, res, next) => {
     };
 if (req.file) {
   try {
-    eventData.image = req.file.path; 
-    eventData.imagePublicId = req.file.filename || req.file.public_id;
+    const imageData = await uploadImage(req.file); 
+    eventData.image = imageData.url;
+    eventData.imagePublicId = imageData.publicId;
   } catch (uploadError) {
     console.error('Error uploading image:', uploadError);
     return res.status(500).json({
@@ -49,6 +50,7 @@ if (req.file) {
     });
   }
 }
+
 
 
 
