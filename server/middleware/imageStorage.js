@@ -16,8 +16,12 @@ const STORAGE_METHOD = process.env.IMAGE_STORAGE || 'cloudinary';
 
 export const uploadImage = async (file) => {
   if (!file) {
+    console.log('⚠️ No file provided to uploadImage');
     return null;
   }
+
+  console.log(`📤 Uploading image using ${STORAGE_METHOD} storage`);
+  console.log('📋 File details:', { filename: file.originalname, size: file.size, mimetype: file.mimetype });
 
   if (STORAGE_METHOD === 'local') {
     return uploadImageLocal(file);
@@ -28,6 +32,7 @@ export const uploadImage = async (file) => {
 
 const uploadImageCloudinary = async (file) => {
   try {
+    console.log('🚀 Starting Cloudinary upload...');
     const bufferStream = Readable.from(file.buffer);
 
     const result = await new Promise((resolve, reject) => {
@@ -38,8 +43,13 @@ const uploadImageCloudinary = async (file) => {
           public_id: `${Date.now()}-${file.originalname.split('.')[0]}`
         },
         (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
+          if (error) {
+            console.log('❌ Cloudinary upload error:', error);
+            reject(error);
+          } else {
+            console.log('✅ Cloudinary upload success:', result.secure_url);
+            resolve(result);
+          }
         }
       );
       bufferStream.pipe(uploadStream);
