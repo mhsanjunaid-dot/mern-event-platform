@@ -82,12 +82,6 @@ const EventsDashboard = () => {
     setTimeout(() => setError(''), 3000);
   }, []);
 
-  const handleEventDeleted = useCallback((id) => {
-    setEvents((prev) => prev.filter((e) => e._id !== id));
-    setSuccessMessage('Event deleted successfully');
-    setTimeout(() => setSuccessMessage(''), 3000);
-  }, []);
-
 
   const clearFilters = () => {
     setSearchQuery('');
@@ -216,7 +210,6 @@ const EventsDashboard = () => {
                 user={user}
                 onRsvpSuccess={handleRsvpSuccess}
                 onRsvpError={handleRsvpError}
-                onEventDeleted={handleEventDeleted}
                 rsvpLoading={rsvpLoading[event._id] || false}
                 setRsvpLoading={(id, isLoading) =>
                   setRsvpLoading((prev) => ({

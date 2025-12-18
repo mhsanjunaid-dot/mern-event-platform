@@ -1,5 +1,5 @@
 import { Event, User } from '../models/index.js';
-import { uploadImage, deleteImage } from '../middleware/imageStorage.js';
+import { uploadImage } from '../middleware/imageStorage.js';
 
 export const createEvent = async (req, res, next) => {
   try {
