@@ -11,15 +11,15 @@ export const eventService = {
     return response.data;
   },
 
+  
+
   createEvent: async (formData) => {
-    const response = await axiosInstance.post('/events', formData, {
-      headers: {
-        // FIX: allow browser to auto-generate multipart boundary
-        "Content-Type": "multipart/form-data",
-      }
-    });
-    return response.data;
-  },
+  const response = await axiosInstance.post('/events', formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+  return response.data;
+},
+
 
   updateEvent: async (id, formData) => {
     const response = await axiosInstance.put(`/events/${id}`, formData, {
