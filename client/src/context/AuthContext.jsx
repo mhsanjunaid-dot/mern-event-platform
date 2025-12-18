@@ -9,6 +9,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const currentPath = window.location.pathname;
+    
+    if (currentPath === '/login' || currentPath === '/signup' || currentPath === '/') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setLoading(false);
+      return;
+    }
+
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
 
