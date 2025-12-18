@@ -26,8 +26,8 @@ connectDB();
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
-      "https://mern-event-platform-e2tz4rj3a-mhsanjunaid-dots-projects.vercel.app"
+      process.env.FRONTEND_URL,
+      "http://localhost:5173"
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -51,6 +51,8 @@ cloudinary.v2.config({
 
 // Local uploads folder support
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+app.options("*", cors());
 
 // API routes
 app.use('/api/auth', authRoutes);
