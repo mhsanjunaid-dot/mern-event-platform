@@ -37,7 +37,7 @@ const SignupPage = () => {
       setLoading(true);
       const data = await authService.signup(email, password, name);
       login(data.user, data.token);
-      navigate('/');
+      navigate('/login');
     } catch (err) {
       setError(err.response?.data?.message || 'Signup failed');
     } finally {

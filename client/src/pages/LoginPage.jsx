@@ -25,7 +25,7 @@ const LoginPage = () => {
       setLoading(true);
       const data = await authService.login(email, password);
       login(data.user, data.token);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     } finally {
