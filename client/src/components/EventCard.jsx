@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { eventService } from '../services/eventService';
 import { rsvpService } from '../services/rsvpService';
+import DeleteConfirmModal from './DeleteConfirmModal';
 import '../styles/event-card.css';
 
 const EventCard = ({
@@ -9,9 +10,14 @@ const EventCard = ({
   user,
   onRsvpSuccess,
   onRsvpError,
+  onEventDeleted,
   rsvpLoading,
   setRsvpLoading
 }) => {
+  // State for delete confirmation modal
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const isEventCreator = user && event.createdBy._id === user.id;
   const isUserAttending = user && event.attendees.includes(user.id);
   const isFull = event.attendees.length >= event.capacity;
@@ -50,6 +56,32 @@ const EventCard = ({
       onRsvpError(err.response?.data?.message || 'Failed to leave event');
     } finally {
       setRsvpLoading(event._id, false);
+    }
+  };
+
+  /**
+   * Delete Event Handler
+   * - Calls delete API
+   * - Shows loading state
+   * - Removes event from DOM on success
+   * - Displays error message on failure
+   */
+  const handleDeleteEvent = async () => {
+    try {
+      setDeleteLoading(true);
+      await eventService.deleteEvent(event._id);
+      
+      // Close modal
+      setShowDeleteConfirm(false);
+      
+      // Remove event from parent state
+      onEventDeleted(event._id);
+    } catch (err) {
+      setShowDeleteConfirm(false);
+      const errorMsg = err.response?.data?.message || 'Failed to delete event';
+      onRsvpError(errorMsg); // Reuse error notification system
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -175,11 +207,22 @@ const EventCard = ({
 
                 {isEventCreator && (
               <>
-              <Link>Edit Event</Link>
+                <Link>Edit Event</Link>
+                {/* Delete Button - Only visible to event creator */}
+                <button
+                  className="btn btn-danger btn-block"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDeleteConfirm(true);
+                  }}
+                  disabled={deleteLoading}
+                >
+                  {deleteLoading ? 'Deleting...' : 'Delete Event'}
+                </button>
               </>
-        )}
+            )}
 
-              </>
+              </> 
             ) : (
               <Link to="/login" className="btn btn-success btn-block">
                 Login to RSVP
@@ -187,6 +230,15 @@ const EventCard = ({
             )}
           </div>
         </div>
+
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmModal
+          show={showDeleteConfirm}
+          title={event.title}
+          onConfirm={handleDeleteEvent}
+          onCancel={() => setShowDeleteConfirm(false)}
+          loading={deleteLoading}
+        />
       </div>
   );
 };

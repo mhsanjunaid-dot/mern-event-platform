@@ -82,6 +82,18 @@ const EventsDashboard = () => {
     setTimeout(() => setError(''), 3000);
   }, []);
 
+  /**
+   * Handle Event Deletion
+   * - Removes event from state array
+   * - Shows success message
+   * - Auto-hides message after 3 seconds
+   */
+  const handleEventDeleted = useCallback((eventId) => {
+    setEvents((prevEvents) => prevEvents.filter((e) => e._id !== eventId));
+    setSuccessMessage('Event deleted successfully');
+    setTimeout(() => setSuccessMessage(''), 3000);
+  }, []);
+
 
   const clearFilters = () => {
     setSearchQuery('');
@@ -210,6 +222,7 @@ const EventsDashboard = () => {
                 user={user}
                 onRsvpSuccess={handleRsvpSuccess}
                 onRsvpError={handleRsvpError}
+                onEventDeleted={handleEventDeleted}
                 rsvpLoading={rsvpLoading[event._id] || false}
                 setRsvpLoading={(id, isLoading) =>
                   setRsvpLoading((prev) => ({
