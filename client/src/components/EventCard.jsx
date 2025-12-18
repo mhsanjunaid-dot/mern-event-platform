@@ -66,6 +66,22 @@ const handleLeaveEvent = async () => {
     }
   };
 
+  const getImageUrl = () => {
+    if (!event.image) return null;
+    
+    // If it's already a full URL (Cloudinary), use it directly
+    if (event.image.startsWith('http')) {
+      return event.image;
+    }
+    
+    // If it's a local path, prepend the server URL
+    if (event.image.startsWith('/')) {
+      return `http://localhost:5001${event.image}`;
+    }
+    
+    return event.image;
+  };
+
   const formatDate = (date) => {
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
@@ -89,7 +105,7 @@ const handleLeaveEvent = async () => {
       <div className="event-card-image-container">
         {event.image ? (
           <img 
-           src={event.image}
+           src={getImageUrl()}
            alt={event.title}
           />
 

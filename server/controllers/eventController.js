@@ -1,6 +1,5 @@
 import { Event, User } from '../models/index.js';
-import cloudinary from '../config/cloudinary.js';
-import { Readable } from 'stream';
+import { uploadImage, deleteImage } from '../middleware/imageStorage.js';
 
 export const createEvent = async (req, res, next) => {
   try {
@@ -42,31 +41,14 @@ export const createEvent = async (req, res, next) => {
       attendees: [req.user.id] // Creator is automatically an attendee
     };
 
-    // Upload image to Cloudinary if file was provided
+    // Upload image if file was provided
     if (req.file) {
       try {
-        // Convert buffer to stream for Cloudinary
-        const bufferStream = Readable.from(req.file.buffer);
-        
-        const result = await new Promise((resolve, reject) => {
-          const uploadStream = cloudinary.uploader.upload_stream(
-            {
-              folder: 'event-platform/events',
-              resource_type: 'auto',
-              public_id: `${Date.now()}-${req.file.originalname.split('.')[0]}`
-            },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            }
-          );
-          bufferStream.pipe(uploadStream);
-        });
-
-        eventData.image = result.secure_url;
-        eventData.imagePublicId = result.public_id; // Store for deletion later
+        const imageData = await uploadImage(req.file);
+        eventData.image = imageData.url;
+        eventData.imagePublicId = imageData.publicId;
       } catch (uploadError) {
-        console.error('Error uploading to Cloudinary:', uploadError);
+        console.error('Error uploading image:', uploadError);
         return res.status(500).json({
           success: false,
           message: 'Failed to upload image',
@@ -182,38 +164,17 @@ export const updateEvent = async (req, res, next) => {
     // Handle image update
     if (req.file) {
       try {
-        // Delete old image from Cloudinary if it exists
+        // Delete old image if it exists
         if (event.imagePublicId) {
-          try {
-            await cloudinary.uploader.destroy(event.imagePublicId);
-          } catch (deleteError) {
-            console.error('Error deleting old image from Cloudinary:', deleteError);
-          }
+          await deleteImage(event.imagePublicId);
         }
 
-        // Upload new image to Cloudinary
-        const { Readable } = await import('stream');
-        const bufferStream = Readable.from(req.file.buffer);
-        
-        const result = await new Promise((resolve, reject) => {
-          const uploadStream = cloudinary.uploader.upload_stream(
-            {
-              folder: 'event-platform/events',
-              resource_type: 'auto',
-              public_id: `${Date.now()}-${req.file.originalname.split('.')[0]}`
-            },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            }
-          );
-          bufferStream.pipe(uploadStream);
-        });
-
-        event.image = result.secure_url;
-        event.imagePublicId = result.public_id;
+        // Upload new image
+        const imageData = await uploadImage(req.file);
+        event.image = imageData.url;
+        event.imagePublicId = imageData.publicId;
       } catch (uploadError) {
-        console.error('Error uploading to Cloudinary:', uploadError);
+        console.error('Error uploading image:', uploadError);
         return res.status(500).json({
           success: false,
           message: 'Failed to upload image',
@@ -256,14 +217,9 @@ export const deleteEvent = async (req, res, next) => {
       });
     }
 
-    // Delete image file if it exists
+    // Delete image if it exists
     if (event.imagePublicId) {
-      try {
-        await cloudinary.uploader.destroy(event.imagePublicId);
-      } catch (deleteError) {
-        console.error('Error deleting image from Cloudinary:', deleteError);
-        // Continue with event deletion even if image deletion fails
-      }
+      await deleteImage(event.imagePublicId);
     }
 
     await Event.findByIdAndDelete(id);

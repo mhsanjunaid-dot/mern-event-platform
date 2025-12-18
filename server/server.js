@@ -1,7 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import cloudinary from 'cloudinary';
+import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import errorHandler from './middleware/errorHandler.js';
 import authRoutes from './routes/authRoutes.js';
@@ -9,6 +11,10 @@ import eventRoutes from './routes/eventRoutes.js';
 import rsvpRoutes from './routes/rsvpRoutes.js';
 
 dotenv.config();
+
+// Setup __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Configure Cloudinary
 cloudinary.v2.config({
@@ -30,6 +36,9 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files for local image storage (always available for backward compatibility)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
