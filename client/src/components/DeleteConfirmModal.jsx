@@ -10,7 +10,7 @@ const DeleteConfirmModal = ({
   if (!show) return null;
   
   return (
-    <div className="modal-overlay" onClick={() => !loading && onCancel()}>
+    <div className="modal-overlay" onClick={() => { if (!loading) onCancel(); }}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <h3>⚠️ Delete Event?</h3>
         <p>
