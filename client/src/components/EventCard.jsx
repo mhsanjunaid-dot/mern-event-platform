@@ -202,11 +202,16 @@ const EventCard = ({
                       Edit Event
                     </Link>
                     <button
-                      className="btn btn-danger btn-block"
-                      onClick={() => setShowDeleteConfirm(true)}
+                      className="btn btn-danger"
+                      onClick={async () => {
+                      await handleDeleteEvent();    // << run delete
+                      onEventDeleted();             // << tell parent AFTER delete
+                  }}
+                      disabled={deleteLoading}
                     >
-                      Delete Event
+                      {deleteLoading ? 'Deleting...' : 'Yes, Delete Event'}
                     </button>
+
                   </>
                 )}
               </>
