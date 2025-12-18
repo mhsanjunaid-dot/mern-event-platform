@@ -25,6 +25,9 @@ const EventCard = ({
   const eventDate = new Date(event.dateTime);
   const isEventPast = eventDate < new Date();
 
+
+  if (!event || !event._id) return null;
+
   const handleJoinEvent = async () => {
     if (!user) {
       onRsvpError('Please login to RSVP to events');
@@ -194,26 +197,20 @@ const EventCard = ({
                 )}
 
                 {isEventCreator && (
-                  <>
-                    <Link
-                      to={`/edit-event/${event._id}`}
-                      className="btn btn-tertiary btn-block"
-                    >
-                      Edit Event
-                    </Link>
-                    <button
-                      className="btn btn-danger"
-                      onClick={async () => {
-                      await handleDeleteEvent();    // << run delete
-                      onEventDeleted();             // << tell parent AFTER delete
-                  }}
-                      disabled={deleteLoading}
-                    >
-                      {deleteLoading ? 'Deleting...' : 'Yes, Delete Event'}
-                    </button>
+              <>
+              <Link>Edit Event</Link>
+              <button
+              className="btn btn-danger btn-block"
+              onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteConfirm(true);
+                }}
+               >
+               Delete Event
+              </button>
+              </>
+        )}
 
-                  </>
-                )}
               </>
             ) : (
               <Link to="/login" className="btn btn-success btn-block">
@@ -223,8 +220,8 @@ const EventCard = ({
           </div>
         </div>
 
-        {showDeleteConfirm && isEventCreator && (
-          <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
+        {showDeleteConfirm && isEventCreator && event._id === user.id && (
+           <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <h3>⚠️ Delete Event?</h3>
               <p>
