@@ -58,24 +58,21 @@ const EventCard = ({
   };
 
   const handleDeleteEvent = async () => {
-    if (!isEventCreator) {
-      onRsvpError('You are not authorized to delete this event. Only the event creator can delete it.');
-      setShowDeleteConfirm(false);
-      return;
-    }
+  try {
+    setDeleteLoading(true);
 
-    try {
-      setDeleteLoading(true);
-      await eventService.deleteEvent(event._id);
-      onEventDeleted();
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Failed to delete event';
-      onRsvpError(errorMessage);
-    } finally {
-      setDeleteLoading(false);
-      setShowDeleteConfirm(false);
-    }
-  };
+    await eventService.deleteEvent(event._id);
+
+    setShowDeleteConfirm(false);
+    onEventDeleted(event._id);  // send ID to parent to refresh UI
+  } catch (err) {
+    setShowDeleteConfirm(false);
+    onRsvpError(err.response?.data?.message || 'Failed to delete event');
+  } finally {
+    setDeleteLoading(false);
+  }
+};
+
 
   const getImageUrl = () => {
     if (!event.image) return null;
@@ -239,12 +236,16 @@ const EventCard = ({
                   Cancel
                 </button>
                 <button
-                  className="btn btn-danger"
-                  onClick={handleDeleteEvent}
-                  disabled={deleteLoading}
-                >
-                  {deleteLoading ? 'Deleting...' : 'Yes, Delete Event'}
-                </button>
+                   className="btn btn-danger"
+                   onClick={(e) => {
+                   e.stopPropagation();
+                   handleDeleteEvent();
+                    }}
+                   disabled={deleteLoading}
+                  >
+                   {deleteLoading ? "Deleting..." : "Yes, Delete Event"}
+                 </button>
+
               </div>
             </div>
           </div>

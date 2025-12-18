@@ -84,15 +84,12 @@ const EventsDashboard = () => {
     setTimeout(() => setError(''), 3000);
   }, []);
 
-  const handleEventDeleted = useCallback(() => {
-    setSuccessMessage('Event deleted successfully');
-    setPendingDeleteId(null); // 🔥 fix glitch: clear delete focus
-    setTimeout(() => setSuccessMessage(''), 3000);
+  const handleEventDeleted = useCallback((id) => {
+  setEvents((prev) => prev.filter((e) => e._id !== id));
+  setSuccessMessage('Event deleted successfully');
+  setTimeout(() => setSuccessMessage(''), 3000);
+}, []);
 
-    setTimeout(() => {
-      fetchAllEvents(); // 🔥 delay refresh 200ms to stop flicker
-    }, 200);
-  }, []);
 
   const clearFilters = () => {
     setSearchQuery('');
