@@ -19,11 +19,23 @@ GitHub Repository
 (https://github.com/mhsanjunaid-dot/mern-event-platform)
 
 ---
-Screenshots (add later)
+📸 Screenshots
+
+Below are quick visuals from the platform showing user flow and responsive design.
+
+🟣 Sign Up Page
+
+🟣 Login Page
+
+🟣 Dashboard
+
+🟣 Events List
+
+🟣 Create Event Page
+
+🟣 Responsive UI
 
 ---
-
-Demo Video (add later)
 
 ---
 Login Credentials 
