@@ -36,21 +36,21 @@ export const createEvent = async (req, res, next) => {
       createdBy: req.user.id,
       attendees: [req.user.id]
     };
+if (req.file) {
+  try {
+    eventData.image = req.file.path; // Cloudinary multer gives .path
+    eventData.imagePublicId = req.file.filename; // stores publicId
+  } catch (uploadError) {
+    console.error('Error uploading image:', uploadError);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to upload image',
+      error: uploadError.message
+    });
+  }
+}
 
-    if (req.file) {
-      try {
-        const imageData = await uploadImage(req.file);
-        eventData.image = imageData.url;
-        eventData.imagePublicId = imageData.publicId;
-      } catch (uploadError) {
-        console.error('Error uploading image:', uploadError);
-        return res.status(500).json({
-          success: false,
-          message: 'Failed to upload image',
-          error: uploadError.message
-        });
-      }
-    }
+
 
     const event = await Event.create(eventData);
 
