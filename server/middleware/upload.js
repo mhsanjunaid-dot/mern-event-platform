@@ -5,18 +5,13 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDir = path.join(__dirname, '..', 'uploads');
-const STORAGE_METHOD = process.env.IMAGE_STORAGE || 'cloudinary';
 
-// Ensure uploads directory exists for local storage
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Use memory storage for both methods - actual storage handled in imageStorage.js
-// This keeps the middleware simple and lets the controller handle storage logic
 const storage = multer.memoryStorage();
 
-// File filter for images only
 const fileFilter = (req, file, cb) => {
   const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
@@ -27,10 +22,9 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Create multer instance with single image field
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: fileFilter
 });
 

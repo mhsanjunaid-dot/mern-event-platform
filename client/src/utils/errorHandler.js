@@ -1,8 +1,3 @@
-/**
- * Parse API error response
- * @param {Error} error - Axios error object
- * @returns {string} User-friendly error message
- */
 export const getErrorMessage = (error) => {
   if (!error.response) {
     return 'Network error. Please check your connection.';
@@ -10,12 +5,10 @@ export const getErrorMessage = (error) => {
 
   const { status, data } = error.response;
 
-  // Use backend error message if available
   if (data?.message) {
     return data.message;
   }
 
-  // Fallback based on status code
   switch (status) {
     case 400:
       return 'Bad request. Please check your input.';

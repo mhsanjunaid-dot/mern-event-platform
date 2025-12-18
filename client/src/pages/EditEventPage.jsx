@@ -7,9 +7,8 @@ import '../styles/event-form.css';
 const EditEventPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
-  // Form state
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -28,20 +27,28 @@ const EditEventPage = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [authError, setAuthError] = useState('');
 
-  // Fetch event data on mount
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
     const fetchEvent = async () => {
+      if (!user) {
+        setAuthError('You must be logged in to edit events.');
+        setPageLoading(false);
+        return;
+      }
+
       try {
-        const eventData = await eventService.getEventById(id);
+        const response = await eventService.getEventById(id);
+        const eventData = response.event || response;
         
-        // Check authorization - only creator can edit
         if (eventData.createdBy._id !== user.id) {
           setAuthError('You are not authorized to edit this event. Only the event creator can edit it.');
           setPageLoading(false);
           return;
         }
 
-        // Pre-fill form with event data
         const eventDateTime = new Date(eventData.dateTime);
         const formattedDateTime = eventDateTime.toISOString().slice(0, 16);
 
@@ -53,7 +60,6 @@ const EditEventPage = () => {
           capacity: eventData.capacity.toString()
         });
 
-        // Set current image
         if (eventData.image) {
           setCurrentImage(eventData.image);
         }
@@ -72,16 +78,14 @@ const EditEventPage = () => {
     if (user && id) {
       fetchEvent();
     }
-  }, [id, user]);
+  }, [id, user, authLoading]);
 
-  // Handle text input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value
     }));
-    // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -90,11 +94,9 @@ const EditEventPage = () => {
     }
   };
 
-  // Handle image file selection
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         setErrors((prev) => ({
           ...prev,
@@ -103,7 +105,6 @@ const EditEventPage = () => {
         return;
       }
 
-      // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
         setErrors((prev) => ({
           ...prev,
@@ -114,14 +115,12 @@ const EditEventPage = () => {
 
       setImageFile(file);
 
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
 
-      // Clear image error
       if (errors.image) {
         setErrors((prev) => ({
           ...prev,
@@ -131,18 +130,15 @@ const EditEventPage = () => {
     }
   };
 
-  // Remove new image selection
   const handleRemoveNewImage = () => {
     setImageFile(null);
     setImagePreview(null);
   };
 
-  // Remove current image
   const handleRemoveCurrentImage = () => {
     setCurrentImage(null);
   };
 
-  // Validate form
   const validateForm = () => {
     const newErrors = {};
 
@@ -189,11 +185,9 @@ const EditEventPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate before submitting
     if (!validateForm()) {
       setApiError('');
       return;
@@ -204,7 +198,6 @@ const EditEventPage = () => {
       setApiError('');
       setSuccessMessage('');
 
-      // Build FormData for multipart request
       const submitData = new FormData();
       submitData.append('title', formData.title.trim());
       submitData.append('description', formData.description.trim());
@@ -212,17 +205,14 @@ const EditEventPage = () => {
       submitData.append('location', formData.location.trim());
       submitData.append('capacity', parseInt(formData.capacity, 10));
 
-      // Add new image if selected
       if (imageFile) {
         submitData.append('image', imageFile);
       }
 
-      // Call the event service
       await eventService.updateEvent(id, submitData);
 
       setSuccessMessage('Event updated successfully! Redirecting...');
 
-      // Redirect to dashboard after 1 second
       setTimeout(() => {
         navigate('/');
       }, 1000);
@@ -236,14 +226,12 @@ const EditEventPage = () => {
     }
   };
 
-  // Get minimum datetime for input (current date/time)
   const getMinDateTime = () => {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     return now.toISOString().slice(0, 16);
   };
 
-  // Show authorization error
   if (authError) {
     return (
       <div className="event-form-container">
@@ -267,7 +255,6 @@ const EditEventPage = () => {
     );
   }
 
-  // Show loading state
   if (pageLoading) {
     return (
       <div className="event-form-container">
@@ -300,7 +287,6 @@ const EditEventPage = () => {
           )}
 
           <form onSubmit={handleSubmit} noValidate>
-            {/* Title */}
             <div className="form-group">
               <label htmlFor="title">
                 Event Title <span className="required">*</span>
@@ -320,7 +306,6 @@ const EditEventPage = () => {
               )}
             </div>
 
-            {/* Description */}
             <div className="form-group">
               <label htmlFor="description">
                 Description <span className="required">*</span>
@@ -340,7 +325,6 @@ const EditEventPage = () => {
               )}
             </div>
 
-            {/* Date and Time */}
             <div className="form-group">
               <label htmlFor="dateTime">
                 Date & Time <span className="required">*</span>
@@ -360,7 +344,6 @@ const EditEventPage = () => {
               )}
             </div>
 
-            {/* Location */}
             <div className="form-group">
               <label htmlFor="location">
                 Location <span className="required">*</span>
@@ -380,7 +363,6 @@ const EditEventPage = () => {
               )}
             </div>
 
-            {/* Capacity */}
             <div className="form-group">
               <label htmlFor="capacity">
                 Capacity <span className="required">*</span>
@@ -402,11 +384,9 @@ const EditEventPage = () => {
               )}
             </div>
 
-            {/* Image Section */}
             <div className="form-group">
               <label>Event Image</label>
 
-              {/* Current Image */}
               {currentImage && !imagePreview && (
                 <div className="image-preview-section">
                   <div className="image-preview">
@@ -430,7 +410,6 @@ const EditEventPage = () => {
                 </div>
               )}
 
-              {/* New Image Preview */}
               {imagePreview && (
                 <div className="image-preview-section">
                   <div className="image-preview">
@@ -447,7 +426,6 @@ const EditEventPage = () => {
                 </div>
               )}
 
-              {/* File Input */}
               {!imagePreview && (
                 <div className="file-input-wrapper">
                   <input
@@ -471,7 +449,6 @@ const EditEventPage = () => {
               )}
             </div>
 
-            {/* Buttons */}
             <div className="form-actions">
               <button
                 type="submit"

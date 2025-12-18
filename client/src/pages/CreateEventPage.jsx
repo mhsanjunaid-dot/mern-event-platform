@@ -9,7 +9,6 @@ const CreateEventPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Form state
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -25,14 +24,12 @@ const CreateEventPage = () => {
   const [apiError, setApiError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Handle text input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value
     }));
-    // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -41,11 +38,9 @@ const CreateEventPage = () => {
     }
   };
 
-  // Handle image file selection
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         setErrors((prev) => ({
           ...prev,
@@ -54,7 +49,6 @@ const CreateEventPage = () => {
         return;
       }
 
-      // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
         setErrors((prev) => ({
           ...prev,
@@ -65,14 +59,12 @@ const CreateEventPage = () => {
 
       setImageFile(file);
 
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
 
-      // Clear image error
       if (errors.image) {
         setErrors((prev) => ({
           ...prev,
@@ -82,13 +74,11 @@ const CreateEventPage = () => {
     }
   };
 
-  // Remove image
   const handleRemoveImage = () => {
     setImageFile(null);
     setImagePreview(null);
   };
 
-  // Validate form
   const validateForm = () => {
     const newErrors = {};
 
@@ -139,11 +129,9 @@ const CreateEventPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate before submitting
     if (!validateForm()) {
       setApiError('');
       return;
@@ -154,7 +142,6 @@ const CreateEventPage = () => {
       setApiError('');
       setSuccessMessage('');
 
-      // Build FormData for multipart request
       const submitData = new FormData();
       submitData.append('title', formData.title.trim());
       submitData.append('description', formData.description.trim());
@@ -162,17 +149,14 @@ const CreateEventPage = () => {
       submitData.append('location', formData.location.trim());
       submitData.append('capacity', parseInt(formData.capacity, 10));
 
-      // Add image if selected
       if (imageFile) {
         submitData.append('image', imageFile);
       }
 
-      // Call the event service
       const response = await eventService.createEvent(submitData);
 
       setSuccessMessage('Event created successfully! Redirecting...');
 
-      // Redirect to dashboard after 1 second
       setTimeout(() => {
         navigate('/');
       }, 1000);
@@ -186,7 +170,6 @@ const CreateEventPage = () => {
     }
   };
 
-  // Get minimum datetime for input (current date/time)
   const getMinDateTime = () => {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -414,7 +397,6 @@ const CreateEventPage = () => {
   );
 };
 
-// Wrap with ProtectedRoute to ensure user is authenticated
 const ProtectedCreateEventPage = () => (
   <ProtectedRoute>
     <CreateEventPage />

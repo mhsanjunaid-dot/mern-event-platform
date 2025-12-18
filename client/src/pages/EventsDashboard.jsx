@@ -17,12 +17,10 @@ const EventsDashboard = () => {
   const [rsvpLoading, setRsvpLoading] = useState({});
   const { user } = useAuth();
 
-  // Fetch events on component mount
   useEffect(() => {
     fetchAllEvents();
   }, []);
 
-  // Filter and sort events whenever events, filter, or sort changes
   useEffect(() => {
     filterAndSortEvents();
   }, [events, filterType, sortBy, searchQuery]);
@@ -44,7 +42,6 @@ const EventsDashboard = () => {
   const filterAndSortEvents = useCallback(() => {
     let result = [...events];
 
-    // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
@@ -55,14 +52,12 @@ const EventsDashboard = () => {
       );
     }
 
-    // Filter by type
     if (filterType === 'attending' && user) {
       result = result.filter((event) => event.attendees.includes(user.id));
     } else if (filterType === 'created' && user) {
       result = result.filter((event) => event.createdBy._id === user.id);
     }
 
-    // Sort
     if (sortBy === 'date') {
       result.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
     } else if (sortBy === 'title') {

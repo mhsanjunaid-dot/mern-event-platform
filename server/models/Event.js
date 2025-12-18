@@ -48,22 +48,18 @@ const eventSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Index for faster queries
 eventSchema.index({ createdBy: 1 });
 eventSchema.index({ dateTime: 1 });
 eventSchema.index({ attendees: 1 });
 
-// Virtual for attendee count
 eventSchema.virtual('attendeeCount').get(function () {
   return this.attendees.length;
 });
 
-// Virtual for available spots
 eventSchema.virtual('availableSpots').get(function () {
   return this.capacity - this.attendees.length;
 });
 
-// Ensure virtuals are included in JSON output
 eventSchema.set('toJSON', { virtuals: true });
 
 const Event = mongoose.model('Event', eventSchema);

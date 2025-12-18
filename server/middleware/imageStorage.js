@@ -14,11 +14,6 @@ if (!fs.existsSync(uploadsDir)) {
 
 const STORAGE_METHOD = process.env.IMAGE_STORAGE || 'cloudinary';
 
-/**
- * Upload image to either Cloudinary or local storage based on configuration
- * @param {Object} file - Multer file object with buffer, originalname, etc.
- * @returns {Promise<Object>} - Returns { url, publicId } for both storage methods
- */
 export const uploadImage = async (file) => {
   if (!file) {
     return null;
@@ -31,9 +26,6 @@ export const uploadImage = async (file) => {
   }
 };
 
-/**
- * Upload image to Cloudinary
- */
 const uploadImageCloudinary = async (file) => {
   try {
     const bufferStream = Readable.from(file.buffer);
@@ -63,15 +55,11 @@ const uploadImageCloudinary = async (file) => {
   }
 };
 
-/**
- * Upload image to local storage
- */
 const uploadImageLocal = async (file) => {
   try {
     const filename = `${Date.now()}-${file.originalname}`;
     const filepath = path.join(uploadsDir, filename);
 
-    // Write file to disk
     fs.writeFileSync(filepath, file.buffer);
 
     return {
@@ -84,10 +72,6 @@ const uploadImageLocal = async (file) => {
   }
 };
 
-/**
- * Delete image from either Cloudinary or local storage based on configuration
- * @param {string} publicId - The public ID or filename to delete
- */
 export const deleteImage = async (publicId) => {
   if (!publicId) {
     return;
@@ -100,21 +84,14 @@ export const deleteImage = async (publicId) => {
   }
 };
 
-/**
- * Delete image from Cloudinary
- */
 const deleteImageCloudinary = async (publicId) => {
   try {
     await cloudinary.uploader.destroy(publicId);
   } catch (error) {
     console.error('Error deleting image from Cloudinary:', error);
-    // Don't throw - continue with event deletion even if image deletion fails
   }
 };
 
-/**
- * Delete image from local storage
- */
 const deleteImageLocal = async (filename) => {
   try {
     const filepath = path.join(uploadsDir, filename);
@@ -123,7 +100,6 @@ const deleteImageLocal = async (filename) => {
     }
   } catch (error) {
     console.error('Error deleting image from local storage:', error);
-    // Don't throw - continue with event deletion even if image deletion fails
   }
 };
 

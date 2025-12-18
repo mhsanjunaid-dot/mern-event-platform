@@ -12,7 +12,6 @@ export const signup = async (req, res, next) => {
   try {
     const { email, password, name } = req.body;
 
-    // Validation
     if (!email || !password || !name) {
       return res.status(400).json({
         success: false,
@@ -20,7 +19,6 @@ export const signup = async (req, res, next) => {
       });
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({
@@ -29,18 +27,15 @@ export const signup = async (req, res, next) => {
       });
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
     const user = await User.create({
       email,
       password: hashedPassword,
       name
     });
 
-    // Generate token
     const token = generateToken(user._id);
 
     res.status(201).json({
@@ -62,7 +57,6 @@ export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Validation
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -70,7 +64,6 @@ export const login = async (req, res, next) => {
       });
     }
 
-    // Find user and get password field
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(401).json({
@@ -79,7 +72,6 @@ export const login = async (req, res, next) => {
       });
     }
 
-    // Compare password
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
       return res.status(401).json({
@@ -88,7 +80,6 @@ export const login = async (req, res, next) => {
       });
     }
 
-    // Generate token
     const token = generateToken(user._id);
 
     res.status(200).json({

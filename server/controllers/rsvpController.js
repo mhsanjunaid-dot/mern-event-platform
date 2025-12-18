@@ -5,7 +5,6 @@ export const joinEvent = async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user.id;
 
-    // Find event
     const event = await Event.findById(id);
     if (!event) {
       return res.status(404).json({
@@ -14,7 +13,6 @@ export const joinEvent = async (req, res, next) => {
       });
     }
 
-    // Check if user already RSVPed
     if (event.attendees.includes(userId)) {
       return res.status(400).json({
         success: false,
@@ -22,7 +20,6 @@ export const joinEvent = async (req, res, next) => {
       });
     }
 
-    // Check capacity before attempting update
     if (event.attendees.length >= event.capacity) {
       return res.status(400).json({
         success: false,
@@ -30,12 +27,10 @@ export const joinEvent = async (req, res, next) => {
       });
     }
 
-    // Atomic conditional update: only add if capacity allows
-    // This prevents race conditions during simultaneous requests
     const updatedEvent = await Event.findByIdAndUpdate(
       id,
       {
-        $addToSet: { attendees: userId } // $addToSet ensures no duplicates
+        $addToSet: { attendees: userId }
       },
       {
         new: true,
@@ -43,7 +38,6 @@ export const joinEvent = async (req, res, next) => {
       }
     );
 
-    // Verify the update succeeded (user was actually added)
     if (!updatedEvent.attendees.includes(userId)) {
       return res.status(400).json({
         success: false,
@@ -51,7 +45,6 @@ export const joinEvent = async (req, res, next) => {
       });
     }
 
-    // Fetch full document with populated references
     const populatedEvent = await Event.findById(id)
       .populate('createdBy', 'name email')
       .populate('attendees', 'name email');
@@ -71,7 +64,6 @@ export const leaveEvent = async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user.id;
 
-    // Find event
     const event = await Event.findById(id);
     if (!event) {
       return res.status(404).json({
@@ -80,7 +72,6 @@ export const leaveEvent = async (req, res, next) => {
       });
     }
 
-    // Check if user is RSVPed
     if (!event.attendees.includes(userId)) {
       return res.status(400).json({
         success: false,
@@ -88,7 +79,6 @@ export const leaveEvent = async (req, res, next) => {
       });
     }
 
-    // Prevent event creator from leaving their own event
     if (event.createdBy.toString() === userId) {
       return res.status(400).json({
         success: false,
@@ -96,7 +86,6 @@ export const leaveEvent = async (req, res, next) => {
       });
     }
 
-    // Remove user from attendees
     const updatedEvent = await Event.findByIdAndUpdate(
       id,
       {
@@ -108,7 +97,6 @@ export const leaveEvent = async (req, res, next) => {
       }
     );
 
-    // Fetch full document with populated references
     const populatedEvent = await Event.findById(id)
       .populate('createdBy', 'name email')
       .populate('attendees', 'name email');

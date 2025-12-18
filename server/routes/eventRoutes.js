@@ -11,13 +11,9 @@ import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
-
-
-// Public routes
 router.get('/', getAllEvents);
 router.get('/:id', getEventById);
 
-// Protected routes - multer.single('image') parses FormData and populates req.file + req.body
 router.post('/', protect, upload.single('image'), createEvent);
 router.put('/:id', protect, upload.single('image'), updateEvent);
 router.delete('/:id', protect, deleteEvent);
