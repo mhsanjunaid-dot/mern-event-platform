@@ -9,9 +9,13 @@ const EventCard = ({
   user,
   onRsvpSuccess,
   onRsvpError,
+  onEventDeleted,
   rsvpLoading,
   setRsvpLoading
 }) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const isEventCreator = user && event.createdBy._id === user.id;
   const isUserAttending = user && event.attendees.includes(user.id);
   const isFull = event.attendees.length >= event.capacity;
@@ -21,8 +25,21 @@ const EventCard = ({
   const eventDate = new Date(event.dateTime);
   const isEventPast = eventDate < new Date();
 
-
   if (!event || !event._id) return null;
+
+  // DELETE EVENT HANDLER
+  const handleDeleteEvent = async () => {
+    try {
+      setDeleteLoading(true);
+      await eventService.deleteEvent(event._id);
+      onEventDeleted();
+    } catch (err) {
+      onRsvpError(err.response?.data?.message || 'Failed to delete event');
+    } finally {
+      setDeleteLoading(false);
+      setShowDeleteConfirm(false);
+    }
+  };
 
   const handleJoinEvent = async () => {
     if (!user) {
@@ -52,7 +69,6 @@ const EventCard = ({
       setRsvpLoading(event._id, false);
     }
   };
-
 
   const getImageUrl = () => {
     if (!event.image) return null;
@@ -174,11 +190,19 @@ const EventCard = ({
                 )}
 
                 {isEventCreator && (
-              <>
-                <Link>Edit Event</Link>
-              </>
-            )}
+                  <>
+                    <Link to={`/edit-event/${event._id}`} className="btn btn-tertiary btn-block">
+                      Edit Event
+                    </Link>
 
+                    <button
+                      className="btn btn-danger btn-block"
+                      onClick={() => setShowDeleteConfirm(true)}
+                    >
+                      Delete Event
+                    </button>
+                  </>
+                )}
               </>
             ) : (
               <Link to="/login" className="btn btn-success btn-block">
@@ -187,6 +211,36 @@ const EventCard = ({
             )}
           </div>
         </div>
+
+        {/* DELETE MODAL */}
+        {showDeleteConfirm && isEventCreator && (
+          <div className="modal-overlay">
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h3>Delete Event?</h3>
+              <p>
+                Are you sure you want to delete <strong>"{event.title}"</strong>?
+              </p>
+
+              <div className="modal-actions">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={deleteLoading}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  className="btn btn-danger"
+                  onClick={() => handleDeleteEvent()}
+                  disabled={deleteLoading}
+                >
+                  {deleteLoading ? 'Deleting...' : 'Yes, Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
   );
 };
