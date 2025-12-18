@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { eventService } from '../services/eventService';
 import { rsvpService } from '../services/rsvpService';
+import DeleteConfirmModal from './DeleteConfirmModal';
 import '../styles/event-card.css';
 
 const EventCard = ({
@@ -217,38 +218,13 @@ const EventCard = ({
           </div>
         </div>
 
-        {showDeleteConfirm && (
-           <div className="modal-overlay" onClick={() => { if (!deleteLoading) setShowDeleteConfirm(false); }}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h3>⚠️ Delete Event?</h3>
-              <p>
-                Are you sure you want to delete <strong>"{event.title}"</strong>? 
-              </p>
-              <p className="modal-warning">
-                This action cannot be undone.
-              </p>
-              <div className="modal-actions">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowDeleteConfirm(false)}
-                  disabled={deleteLoading}
-                >
-                  Cancel
-                </button>
-                <button
-                   className="btn btn-danger"
-                   onClick={(e) => {
-                   e.stopPropagation();
-                   handleDeleteEvent();
-                    }}
-                   disabled={deleteLoading}
-                  >
-                   {deleteLoading ? "Deleting..." : "Yes, Delete Event"}
-                 </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <DeleteConfirmModal
+          show={showDeleteConfirm}
+          title={event.title}
+          onConfirm={handleDeleteEvent}
+          onCancel={() => setShowDeleteConfirm(false)}
+          loading={deleteLoading}
+        />
       </div>
   );
 };
