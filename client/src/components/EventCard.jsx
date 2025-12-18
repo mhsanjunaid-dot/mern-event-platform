@@ -76,15 +76,18 @@ const EventCard = ({
 
   const getImageUrl = () => {
     if (!event.image) return null;
+    
     if (event.image.startsWith('http')) {
       return event.image;
     }
+    
     if (event.image.startsWith('/')) {
       const baseURL = import.meta.env.VITE_API_URL || 'https://mern-event-platform-qgpq.onrender.com/api';
-      const baseServerURL = baseURL.replace('/api', '');
+      const baseServerURL = baseURL.replace(/\/api$/, '');
       return `${baseServerURL}${event.image}`;
     }
-    return event.image;
+    
+    return null;
   };
 
   const formatDate = (date) => {

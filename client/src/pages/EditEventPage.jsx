@@ -396,7 +396,7 @@ const EditEventPage = () => {
                           ? currentImage
                           : (() => {
                               const baseURL = import.meta.env.VITE_API_URL || 'https://mern-event-platform-qgpq.onrender.com/api';
-                              const baseServerURL = baseURL.replace('/api', '');
+                              const baseServerURL = baseURL.replace(/\/api$/, '');
                               return `${baseServerURL}${currentImage}`;
                             })()
                       }
