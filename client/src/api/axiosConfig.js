@@ -1,10 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "https://mern-event-platform-qgpq.onrender.com/api", 
-  headers: {
-    "Content-Type": "application/json"
-  }
+  baseURL: "https://mern-event-platform-qgpq.onrender.com/api"
 });
 
 axiosInstance.interceptors.request.use((config) => {
@@ -14,6 +11,8 @@ axiosInstance.interceptors.request.use((config) => {
   }
   if (config.data instanceof FormData) {
     delete config.headers["Content-Type"];
+  } else {
+    config.headers["Content-Type"] = "application/json";
   }
   return config;
 });
