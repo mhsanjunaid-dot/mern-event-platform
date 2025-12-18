@@ -1,5 +1,6 @@
 import { Event, User } from '../models/index.js';
-import fs from 'fs';
+import cloudinary from '../config/cloudinary.js';
+import { Readable } from 'stream';
 
 export const createEvent = async (req, res, next) => {
   try {
@@ -8,14 +9,6 @@ export const createEvent = async (req, res, next) => {
 
     // Validation
     if (!title || !description || !dateTime || !location || !capacity) {
-      // Delete uploaded image if validation fails
-      if (req.file) {
-        try {
-          fs.unlinkSync(req.file.path);
-        } catch (deleteError) {
-          console.error('Error deleting image:', deleteError);
-        }
-      }
       return res.status(400).json({
         success: false,
         message: 'Please provide all required fields: title, description, dateTime, location, capacity'
@@ -23,13 +16,6 @@ export const createEvent = async (req, res, next) => {
     }
 
     if (isNaN(capacity) || capacity < 1) {
-      if (req.file) {
-        try {
-          fs.unlinkSync(req.file.path);
-        } catch (deleteError) {
-          console.error('Error deleting image:', deleteError);
-        }
-      }
       return res.status(400).json({
         success: false,
         message: 'Capacity must be at least 1'
@@ -39,13 +25,6 @@ export const createEvent = async (req, res, next) => {
     // Check if dateTime is in future
     const eventDateTime = new Date(dateTime);
     if (isNaN(eventDateTime.getTime()) || eventDateTime < new Date()) {
-      if (req.file) {
-        try {
-          fs.unlinkSync(req.file.path);
-        } catch (deleteError) {
-          console.error('Error deleting image:', deleteError);
-        }
-      }
       return res.status(400).json({
         success: false,
         message: 'Event date must be valid and in the future'
@@ -63,9 +42,37 @@ export const createEvent = async (req, res, next) => {
       attendees: [req.user.id] // Creator is automatically an attendee
     };
 
-    // Add image URL if file was uploaded
+    // Upload image to Cloudinary if file was provided
     if (req.file) {
-      eventData.image = `/uploads/${req.file.filename}`;
+      try {
+        // Convert buffer to stream for Cloudinary
+        const bufferStream = Readable.from(req.file.buffer);
+        
+        const result = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'event-platform/events',
+              resource_type: 'auto',
+              public_id: `${Date.now()}-${req.file.originalname.split('.')[0]}`
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+          bufferStream.pipe(uploadStream);
+        });
+
+        eventData.image = result.secure_url;
+        eventData.imagePublicId = result.public_id; // Store for deletion later
+      } catch (uploadError) {
+        console.error('Error uploading to Cloudinary:', uploadError);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to upload image',
+          error: uploadError.message
+        });
+      }
     }
 
     const event = await Event.create(eventData);
@@ -79,14 +86,6 @@ export const createEvent = async (req, res, next) => {
       event
     });
   } catch (error) {
-    // Delete uploaded image if event creation fails
-    if (req.file && req.file.public_id) {
-      try {
-        await cloudinary.uploader.destroy(req.file.public_id);
-      } catch (deleteError) {
-        console.error('Error deleting image from Cloudinary:', deleteError);
-      }
-    }
     next(error);
   }
 };
@@ -140,13 +139,6 @@ export const updateEvent = async (req, res, next) => {
     // Find event
     let event = await Event.findById(id);
     if (!event) {
-      if (req.file && req.file.public_id) {
-        try {
-          await cloudinary.uploader.destroy(req.file.public_id);
-        } catch (deleteError) {
-          console.error('Error deleting image from Cloudinary:', deleteError);
-        }
-      }
       return res.status(404).json({
         success: false,
         message: 'Event not found'
@@ -155,13 +147,6 @@ export const updateEvent = async (req, res, next) => {
 
     // Check authorization
     if (event.createdBy.toString() !== req.user.id) {
-      if (req.file && req.file.public_id) {
-        try {
-          await cloudinary.uploader.destroy(req.file.public_id);
-        } catch (deleteError) {
-          console.error('Error deleting image from Cloudinary:', deleteError);
-        }
-      }
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this event'
@@ -170,13 +155,6 @@ export const updateEvent = async (req, res, next) => {
 
     // Validate capacity doesn't go below current attendee count
     if (capacity && parseInt(capacity, 10) < event.attendees.length) {
-      if (req.file && req.file.public_id) {
-        try {
-          await cloudinary.uploader.destroy(req.file.public_id);
-        } catch (deleteError) {
-          console.error('Error deleting image from Cloudinary:', deleteError);
-        }
-      }
       return res.status(400).json({
         success: false,
         message: `Capacity cannot be less than current attendee count (${event.attendees.length})`
@@ -187,13 +165,6 @@ export const updateEvent = async (req, res, next) => {
     if (dateTime) {
       const newDateTime = new Date(dateTime);
       if (isNaN(newDateTime.getTime()) || newDateTime < new Date()) {
-        if (req.file && req.file.public_id) {
-          try {
-            await cloudinary.uploader.destroy(req.file.public_id);
-          } catch (deleteError) {
-            console.error('Error deleting image from Cloudinary:', deleteError);
-          }
-        }
         return res.status(400).json({
           success: false,
           message: 'Event date must be valid and in the future'
@@ -210,20 +181,45 @@ export const updateEvent = async (req, res, next) => {
 
     // Handle image update
     if (req.file) {
-      // Delete old image file if it exists
-      if (event.image) {
-        try {
-          const fs = await import('fs');
-          const filePath = `server/uploads/${event.image.split('/').pop()}`;
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
+      try {
+        // Delete old image from Cloudinary if it exists
+        if (event.imagePublicId) {
+          try {
+            await cloudinary.uploader.destroy(event.imagePublicId);
+          } catch (deleteError) {
+            console.error('Error deleting old image from Cloudinary:', deleteError);
           }
-        } catch (deleteError) {
-          console.error('Error deleting old image:', deleteError);
         }
+
+        // Upload new image to Cloudinary
+        const { Readable } = await import('stream');
+        const bufferStream = Readable.from(req.file.buffer);
+        
+        const result = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'event-platform/events',
+              resource_type: 'auto',
+              public_id: `${Date.now()}-${req.file.originalname.split('.')[0]}`
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+          bufferStream.pipe(uploadStream);
+        });
+
+        event.image = result.secure_url;
+        event.imagePublicId = result.public_id;
+      } catch (uploadError) {
+        console.error('Error uploading to Cloudinary:', uploadError);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to upload image',
+          error: uploadError.message
+        });
       }
-      // Set new image URL
-      event.image = `/uploads/${req.file.filename}`;
     }
 
     event = await event.save();
@@ -236,14 +232,6 @@ export const updateEvent = async (req, res, next) => {
       event
     });
   } catch (error) {
-    // Delete uploaded image if update fails
-    if (req.file && req.file.public_id) {
-      try {
-        await cloudinary.uploader.destroy(req.file.public_id);
-      } catch (deleteError) {
-        console.error('Error deleting image from Cloudinary:', deleteError);
-      }
-    }
     next(error);
   }
 };
@@ -269,15 +257,12 @@ export const deleteEvent = async (req, res, next) => {
     }
 
     // Delete image file if it exists
-    if (event.image) {
+    if (event.imagePublicId) {
       try {
-        const fs = await import('fs');
-        const filePath = `server/uploads/${event.image.split('/').pop()}`;
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
+        await cloudinary.uploader.destroy(event.imagePublicId);
       } catch (deleteError) {
-        console.error('Error deleting image:', deleteError);
+        console.error('Error deleting image from Cloudinary:', deleteError);
+        // Continue with event deletion even if image deletion fails
       }
     }
 

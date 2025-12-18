@@ -11,6 +11,8 @@ import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
+
+
 // Public routes
 router.get('/', getAllEvents);
 router.get('/:id', getEventById);

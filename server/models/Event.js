@@ -29,6 +29,10 @@ const eventSchema = new mongoose.Schema(
       type: String,
       default: null
     },
+    imagePublicId: {
+      type: String,
+      default: null
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
