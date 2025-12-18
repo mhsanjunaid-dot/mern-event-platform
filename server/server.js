@@ -26,9 +26,10 @@ connectDB();
 app.use(
   cors({
     origin: [
-      process.env.FRONTEND_URL,
-      "http://localhost:5173"
-    ],
+  "http://localhost:5173",
+  "https://mern-event-platform-ahzbkxag7-mhsanjunaid-dots-projects.vercel.app"
+],
+
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
