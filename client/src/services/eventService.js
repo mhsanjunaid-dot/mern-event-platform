@@ -12,12 +12,22 @@ export const eventService = {
   },
 
   createEvent: async (formData) => {
-    const response = await axiosInstance.post('/events', formData);
+    const response = await axiosInstance.post('/events', formData, {
+      headers: {
+        // FIX: allow browser to auto-generate multipart boundary
+        "Content-Type": "multipart/form-data",
+      }
+    });
     return response.data;
   },
 
   updateEvent: async (id, formData) => {
-    const response = await axiosInstance.put(`/events/${id}`, formData);
+    const response = await axiosInstance.put(`/events/${id}`, formData, {
+      headers: {
+        // FIX: allow browser to auto-generate multipart boundary
+        "Content-Type": "multipart/form-data",
+      }
+    });
     return response.data;
   },
 
