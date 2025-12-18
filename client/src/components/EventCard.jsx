@@ -80,7 +80,9 @@ const EventCard = ({
       return event.image;
     }
     if (event.image.startsWith('/')) {
-      return `http://localhost:5001${event.image}`;
+      const baseURL = import.meta.env.VITE_API_URL || 'https://mern-event-platform-qgpq.onrender.com/api';
+      const baseServerURL = baseURL.replace('/api', '');
+      return `${baseServerURL}${event.image}`;
     }
     return event.image;
   };

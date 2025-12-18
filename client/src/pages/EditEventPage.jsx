@@ -394,7 +394,11 @@ const EditEventPage = () => {
                       src={
                         currentImage.startsWith('http')
                           ? currentImage
-                          : `http://localhost:5001${currentImage}`
+                          : (() => {
+                              const baseURL = import.meta.env.VITE_API_URL || 'https://mern-event-platform-qgpq.onrender.com/api';
+                              const baseServerURL = baseURL.replace('/api', '');
+                              return `${baseServerURL}${currentImage}`;
+                            })()
                       }
                       alt="Current event"
                     />
