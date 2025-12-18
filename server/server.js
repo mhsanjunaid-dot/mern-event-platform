@@ -22,21 +22,21 @@ const __dirname = path.dirname(__filename);
 // Connect to MongoDB
 connectDB();
 
-// 🔥 CORS MUST BE BEFORE ROUTES
+// ---------------- CORS FIXED ----------------
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://mern-event-platform-86v00q9z9-mhsanjunaid-dots-projects.vercel.app"
+      "https://mern-event-platform-e2tz4rj3a-mhsanjunaid-dots-projects.vercel.app"
     ],
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
 
 // Allow preflight
-app.options('*', cors());
+app.options("*", cors());
 
 // Body parsers
 app.use(express.json());
