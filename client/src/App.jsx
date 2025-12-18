@@ -10,8 +10,7 @@ import SignupPage from './pages/SignupPage';
 import './App.css';
 
 function RootRedirect() {
-  const token = localStorage.getItem('token');
-  return token ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />;
+  return <Navigate to="/login" replace />;
 }
 
 function App() {
