@@ -164,48 +164,50 @@ const handleLeaveEvent = async () => {
         {/* Actions */}
         <div className="event-card-actions">
           {user ? (
-            isUserAttending ? (
-              <>
+            <>
+              {isUserAttending && !isEventCreator && (
                 <button
                   className="btn btn-secondary btn-block"
                   onClick={handleLeaveEvent}
-                  disabled={rsvpLoading || isEventCreator}
-                  title={isEventCreator ? 'You cannot leave your own event' : ''}
+                  disabled={rsvpLoading}
                 >
                   {rsvpLoading ? 'Processing...' : 'Leave Event'}
                 </button>
-                {isEventCreator && (
-                  <>
-                    <Link
-                      to={`/edit-event/${event._id}`}
-                      className="btn btn-tertiary btn-block"
-                    >
-                      Edit Event
-                    </Link>
-                    <button
-                      className="btn btn-danger btn-block"
-                      onClick={() => setShowDeleteConfirm(true)}
-                    >
-                      Delete Event
-                    </button>
-                  </>
-                )}
-              </>
-            ) : (
-              <button
-                className="btn btn-success btn-block"
-                onClick={handleJoinEvent}
-                disabled={isFull || rsvpLoading || isEventPast}
-              >
-                {rsvpLoading
-                  ? 'Processing...'
-                  : isFull
-                  ? 'Event Full'
-                  : isEventPast
-                  ? 'Event Ended'
-                  : 'RSVP Now'}
-              </button>
-            )
+              )}
+              
+              {!isUserAttending && !isEventCreator && (
+                <button
+                  className="btn btn-success btn-block"
+                  onClick={handleJoinEvent}
+                  disabled={isFull || rsvpLoading || isEventPast}
+                >
+                  {rsvpLoading
+                    ? 'Processing...'
+                    : isFull
+                    ? 'Event Full'
+                    : isEventPast
+                    ? 'Event Ended'
+                    : 'RSVP Now'}
+                </button>
+              )}
+
+              {isEventCreator && (
+                <>
+                  <Link
+                    to={`/edit-event/${event._id}`}
+                    className="btn btn-tertiary btn-block"
+                  >
+                    Edit Event
+                  </Link>
+                  <button
+                    className="btn btn-danger btn-block"
+                    onClick={() => setShowDeleteConfirm(true)}
+                  >
+                    Delete Event
+                  </button>
+                </>
+              )}
+            </>
           ) : (
             <Link to="/login" className="btn btn-success btn-block">
               Login to RSVP
