@@ -217,8 +217,8 @@ const EventCard = ({
           </div>
         </div>
 
-        {showDeleteConfirm && isEventCreator && (
-           <div className="modal-overlay" onClick={() => !deleteLoading && setShowDeleteConfirm(false)}>
+        {showDeleteConfirm && (
+           <div className="modal-overlay" onClick={() => { if (!deleteLoading) setShowDeleteConfirm(false); }}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <h3>⚠️ Delete Event?</h3>
               <p>
