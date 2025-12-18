@@ -22,21 +22,27 @@ const __dirname = path.dirname(__filename);
 // Connect to MongoDB
 connectDB();
 
-// ---------------- CORS FIXED ----------------
 app.use(
   cors({
-    origin: [
-  "http://localhost:5173",
-  "https://mern-event-platform-ahzbkxag7-mhsanjunaid-dots-projects.vercel.app"
-],
-
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        process.env.FRONTEND_URL || "https://mern-event-platform.vercel.app"
+      ];
+      
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
 
-// Allow preflight
 app.options("*", cors());
 
 // Body parsers
