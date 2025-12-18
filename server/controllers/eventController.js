@@ -1,5 +1,5 @@
 import { Event, User } from '../models/index.js';
-import cloudinary from '../config/cloudinary.js';
+import fs from 'fs';
 
 export const createEvent = async (req, res, next) => {
   try {
@@ -9,11 +9,11 @@ export const createEvent = async (req, res, next) => {
     // Validation
     if (!title || !description || !dateTime || !location || !capacity) {
       // Delete uploaded image if validation fails
-      if (req.file && req.file.public_id) {
+      if (req.file) {
         try {
-          await cloudinary.uploader.destroy(req.file.public_id);
+          fs.unlinkSync(req.file.path);
         } catch (deleteError) {
-          console.error('Error deleting image from Cloudinary:', deleteError);
+          console.error('Error deleting image:', deleteError);
         }
       }
       return res.status(400).json({
@@ -23,11 +23,11 @@ export const createEvent = async (req, res, next) => {
     }
 
     if (isNaN(capacity) || capacity < 1) {
-      if (req.file && req.file.public_id) {
+      if (req.file) {
         try {
-          await cloudinary.uploader.destroy(req.file.public_id);
+          fs.unlinkSync(req.file.path);
         } catch (deleteError) {
-          console.error('Error deleting image from Cloudinary:', deleteError);
+          console.error('Error deleting image:', deleteError);
         }
       }
       return res.status(400).json({
@@ -39,11 +39,11 @@ export const createEvent = async (req, res, next) => {
     // Check if dateTime is in future
     const eventDateTime = new Date(dateTime);
     if (isNaN(eventDateTime.getTime()) || eventDateTime < new Date()) {
-      if (req.file && req.file.public_id) {
+      if (req.file) {
         try {
-          await cloudinary.uploader.destroy(req.file.public_id);
+          fs.unlinkSync(req.file.path);
         } catch (deleteError) {
-          console.error('Error deleting image from Cloudinary:', deleteError);
+          console.error('Error deleting image:', deleteError);
         }
       }
       return res.status(400).json({
@@ -63,9 +63,9 @@ export const createEvent = async (req, res, next) => {
       attendees: [req.user.id] // Creator is automatically an attendee
     };
 
-    // Add image URL if file was uploaded (Cloudinary secure_url)
-    if (req.file && req.file.secure_url) {
-      eventData.image = req.file.secure_url;
+    // Add image URL if file was uploaded
+    if (req.file) {
+      eventData.image = `/uploads/${req.file.filename}`;
     }
 
     const event = await Event.create(eventData);
@@ -209,20 +209,21 @@ export const updateEvent = async (req, res, next) => {
     if (capacity) event.capacity = parseInt(capacity, 10);
 
     // Handle image update
-    if (req.file && req.file.secure_url) {
-      // Delete old image from Cloudinary if it exists
+    if (req.file) {
+      // Delete old image file if it exists
       if (event.image) {
         try {
-          const urlParts = event.image.split('/');
-          const publicId = urlParts[urlParts.length - 1].split('.')[0];
-          const fullPublicId = `event-platform/events/${publicId}`;
-          await cloudinary.uploader.destroy(fullPublicId);
+          const fs = await import('fs');
+          const filePath = `server/uploads/${event.image.split('/').pop()}`;
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
         } catch (deleteError) {
-          console.error('Error deleting old image from Cloudinary:', deleteError);
+          console.error('Error deleting old image:', deleteError);
         }
       }
-      // Set new image URL from Cloudinary
-      event.image = req.file.secure_url;
+      // Set new image URL
+      event.image = `/uploads/${req.file.filename}`;
     }
 
     event = await event.save();
@@ -267,15 +268,16 @@ export const deleteEvent = async (req, res, next) => {
       });
     }
 
-    // Delete image from Cloudinary if it exists
+    // Delete image file if it exists
     if (event.image) {
       try {
-        const urlParts = event.image.split('/');
-        const publicId = urlParts[urlParts.length - 1].split('.')[0];
-        const fullPublicId = `event-platform/events/${publicId}`;
-        await cloudinary.uploader.destroy(fullPublicId);
+        const fs = await import('fs');
+        const filePath = `server/uploads/${event.image.split('/').pop()}`;
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
       } catch (deleteError) {
-        console.error('Error deleting image from Cloudinary:', deleteError);
+        console.error('Error deleting image:', deleteError);
       }
     }
 

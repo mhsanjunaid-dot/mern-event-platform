@@ -8,12 +8,16 @@ const axiosInstance = axios.create({
   }
 });
 
-// Request interceptor: Attach JWT token
+// Request interceptor: Attach JWT token and handle FormData
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    // Don't set Content-Type if sending FormData - let axios auto-detect
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
     }
     return config;
   },

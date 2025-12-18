@@ -89,7 +89,7 @@ const handleLeaveEvent = async () => {
       <div className="event-card-image-container">
         {event.image ? (
           <img 
-           src={`http://localhost:5001${event.image}`} 
+           src={`http://localhost:5001${event.image}`}
            alt={event.title}
           />
 
